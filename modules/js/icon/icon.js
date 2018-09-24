@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -309,7 +309,7 @@ function mdIconDirective($mdIcon, $mdTheming, $mdAria, $sce) {
 }
 
   
-MdIconService['$inject'] = ["config", "$templateRequest", "$q", "$log", "$mdUtil", "$sce"];angular
+mdIconService['$inject'] = ["config", "$templateRequest", "$q", "$log", "$mdUtil", "$sce", "$window"];angular
     .module('material.components.icon')
     .constant('$$mdSvgRegistry', {
         'mdTabsArrow':   'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxnPjxwb2x5Z29uIHBvaW50cz0iMTUuNCw3LjQgMTQsNiA4LDEyIDE0LDE4IDE1LjQsMTYuNiAxMC44LDEyICIvPjwvZz48L3N2Zz4=',
@@ -320,7 +320,7 @@ MdIconService['$inject'] = ["config", "$templateRequest", "$q", "$log", "$mdUtil
         'mdCalendar':    'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTkgM2gtMVYxaC0ydjJIOFYxSDZ2Mkg1Yy0xLjExIDAtMS45OS45LTEuOTkgMkwzIDE5YzAgMS4xLjg5IDIgMiAyaDE0YzEuMSAwIDItLjkgMi0yVjVjMC0xLjEtLjktMi0yLTJ6bTAgMTZINVY4aDE0djExek03IDEwaDV2NUg3eiIvPjwvc3ZnPg==',
         'mdChecked':     'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxnPjxwYXRoIGQ9Ik05IDE2LjE3TDQuODMgMTJsLTEuNDIgMS40MUw5IDE5IDIxIDdsLTEuNDEtMS40MXoiLz48L2c+PC9zdmc+'
     })
-    .provider('$mdIcon', MdIconProvider);
+    .provider('$mdIcon', mdIconProvider);
 
 /**
  * @ngdoc service
@@ -588,75 +588,78 @@ MdIconService['$inject'] = ["config", "$templateRequest", "$q", "$log", "$mdUtil
  *
  */
 
-var config = {
-  defaultViewBoxSize: 24,
-  defaultFontSet: 'material-icons',
-  fontSets: []
-};
+function mdIconProvider() {
+  var config = {
+    defaultViewBoxSize: 24,
+    defaultFontSet: 'material-icons',
+    fontSets: []
+  };
 
-function MdIconProvider() {
+  function configItem(url, viewBoxSize) {
+    return new ConfigurationItem(url, viewBoxSize || config.defaultViewBoxSize);
+  }
+
+  return {
+    icon: function(id, url, viewBoxSize) {
+      if (id.indexOf(':') == -1) id = '$default:' + id;
+
+      config[id] = configItem(url, viewBoxSize);
+      return this;
+    },
+
+    iconSet: function(id, url, viewBoxSize) {
+      config[id] = configItem(url, viewBoxSize);
+      return this;
+    },
+
+    defaultIconSet: function(url, viewBoxSize) {
+      var setName = '$default';
+
+      if (!config[setName]) {
+        config[setName] = configItem(url, viewBoxSize);
+      }
+
+      config[setName].viewBoxSize = viewBoxSize || config.defaultViewBoxSize;
+
+      return this;
+    },
+
+    defaultViewBoxSize: function(viewBoxSize) {
+      config.defaultViewBoxSize = viewBoxSize;
+      return this;
+    },
+
+    /**
+     * Register an alias name associated with a font-icon library style ;
+     */
+    fontSet: function fontSet(alias, className) {
+      config.fontSets.push({
+        alias: alias,
+        fontSet: className || alias
+      });
+      return this;
+    },
+
+    /**
+     * Specify a default style name associated with a font-icon library
+     * fallback to Material Icons.
+     *
+     */
+    defaultFontSet: function defaultFontSet(className) {
+      config.defaultFontSet = !className ? '' : className;
+      return this;
+    },
+
+    defaultIconSize: function defaultIconSize(iconSize) {
+      config.defaultIconSize = iconSize;
+      return this;
+    },
+
+    $get: ['$injector', function($injector) {
+      return $injector.invoke(mdIconService, undefined, { config: config });
+    }]
+  };
 }
-
-MdIconProvider.prototype = {
-  icon: function(id, url, viewBoxSize) {
-    if (id.indexOf(':') == -1) id = '$default:' + id;
-
-    config[id] = new ConfigurationItem(url, viewBoxSize);
-    return this;
-  },
-
-  iconSet: function(id, url, viewBoxSize) {
-    config[id] = new ConfigurationItem(url, viewBoxSize);
-    return this;
-  },
-
-  defaultIconSet: function(url, viewBoxSize) {
-    var setName = '$default';
-
-    if (!config[setName]) {
-      config[setName] = new ConfigurationItem(url, viewBoxSize);
-    }
-
-    config[setName].viewBoxSize = viewBoxSize || config.defaultViewBoxSize;
-
-    return this;
-  },
-
-  defaultViewBoxSize: function(viewBoxSize) {
-    config.defaultViewBoxSize = viewBoxSize;
-    return this;
-  },
-
-  /**
-   * Register an alias name associated with a font-icon library style ;
-   */
-  fontSet: function fontSet(alias, className) {
-    config.fontSets.push({
-      alias: alias,
-      fontSet: className || alias
-    });
-    return this;
-  },
-
-  /**
-   * Specify a default style name associated with a font-icon library
-   * fallback to Material Icons.
-   *
-   */
-  defaultFontSet: function defaultFontSet(className) {
-    config.defaultFontSet = !className ? '' : className;
-    return this;
-  },
-
-  defaultIconSize: function defaultIconSize(iconSize) {
-    config.defaultIconSize = iconSize;
-    return this;
-  },
-
-  $get: ['$templateRequest', '$q', '$log', '$mdUtil', '$sce', function($templateRequest, $q, $log, $mdUtil, $sce) {
-    return MdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce);
-  }]
-};
 
 /**
  *  Configuration item stored in the Icon registry; used for lookups
@@ -664,7 +667,7 @@ MdIconProvider.prototype = {
  */
 function ConfigurationItem(url, viewBoxSize) {
   this.url = url;
-  this.viewBoxSize = viewBoxSize || config.defaultViewBoxSize;
+  this.viewBoxSize = viewBoxSize;
 }
 
 /**
@@ -711,7 +714,7 @@ function ConfigurationItem(url, viewBoxSize) {
  */
 
 /* ngInject */
-function MdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce) {
+function mdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce, $window) {
   var iconCache = {};
   var svgCache = {};
   var urlRegex = /[-\w@:%+.~#?&//=]{2,}\.[a-z]{2,4}\b(\/[-\w@:%+.~#?&//=]*)?/i;
@@ -845,7 +848,7 @@ function MdIconService(config, $templateRequest, $q, $log, $mdUtil, $sce) {
     function loadByDataUrl(url) {
       var results = dataUrlRegex.exec(url);
       var isBase64 = /base64/i.test(url);
-      var data = isBase64 ? window.atob(results[2]) : results[2];
+      var data = isBase64 ? $window.atob(results[2]) : results[2];
 
       return $q.when(angular.element(data)[0]);
     }

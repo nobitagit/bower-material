@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 goog.provide('ngmaterial.components.autocomplete');
 goog.require('ngmaterial.components.icon');
@@ -22,7 +22,7 @@ angular.module('material.components.autocomplete', [
 ]);
 
 
-MdAutocompleteCtrl['$inject'] = ["$scope", "$element", "$mdUtil", "$mdConstant", "$mdTheming", "$window", "$animate", "$rootElement", "$attrs", "$q", "$log", "$mdLiveAnnouncer"];angular
+MdAutocompleteCtrl['$inject'] = ["$scope", "$element", "$mdUtil", "$mdConstant", "$mdTheming", "$window", "$animate", "$rootElement", "$attrs", "$q", "$log", "$mdLiveAnnouncer", "$document"];angular
     .module('material.components.autocomplete')
     .controller('MdAutocompleteCtrl', MdAutocompleteCtrl);
 
@@ -32,7 +32,8 @@ var ITEM_HEIGHT   = 48,
     INPUT_PADDING = 2; // Padding provided by `md-input-container`
 
 function MdAutocompleteCtrl ($scope, $element, $mdUtil, $mdConstant, $mdTheming, $window,
-                             $animate, $rootElement, $attrs, $q, $log, $mdLiveAnnouncer) {
+                             $animate, $rootElement, $attrs, $q, $log, $mdLiveAnnouncer,
+                             $document) {
 
   // Internal Variables.
   var ctrl                 = this,
@@ -46,7 +47,8 @@ function MdAutocompleteCtrl ($scope, $element, $mdUtil, $mdConstant, $mdTheming,
       fetchesInProgress    = 0,
       enableWrapScroll     = null,
       inputModelCtrl       = null,
-      debouncedOnResize    = $mdUtil.debounce(onWindowResize);
+      debouncedOnResize    = $mdUtil.debounce(onWindowResize),
+      document             = $document[0];
 
   // Public Exported Variables with handlers
   defineProperty('hidden', handleHiddenChange, true);
@@ -1588,14 +1590,15 @@ function MdAutocompleteItemScopeDirective($compile, $mdUtil) {
   }
 }
 
-MdHighlightCtrl['$inject'] = ["$scope", "$element", "$attrs"];angular
+MdHighlightCtrl['$inject'] = ["$scope", "$element", "$attrs", "$document"];angular
     .module('material.components.autocomplete')
     .controller('MdHighlightCtrl', MdHighlightCtrl);
 
-function MdHighlightCtrl ($scope, $element, $attrs) {
+function MdHighlightCtrl ($scope, $element, $attrs, $document) {
   this.$scope = $scope;
   this.$element = $element;
   this.$attrs = $attrs;
+  this.$document = $document;
 
   // Cache the Regex to avoid rebuilding each time.
   this.regex = null;
@@ -1654,7 +1657,7 @@ MdHighlightCtrl.prototype.applyRegex = function(text) {
 
       this.$element.append(tokenEl);
     } else {
-      this.$element.append(document.createTextNode(token));
+      this.$element.append(this.$document[0].createTextNode(token));
     }
 
   }.bind(this));

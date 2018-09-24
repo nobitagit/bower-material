@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -11,6 +11,7 @@
  * @ngdoc module
  * @name material.components.slider
  */
+SliderContainerDirective['$inject'] = ["$window"];
 SliderDirective['$inject'] = ["$$rAF", "$window", "$mdAria", "$mdUtil", "$mdConstant", "$mdTheming", "$mdGesture", "$parse", "$log", "$timeout"];
 angular.module('material.components.slider', [
   'material.core'
@@ -40,7 +41,10 @@ angular.module('material.components.slider', [
  *  </md-slider-container>
  * </hljs>
  */
-function SliderContainerDirective() {
+/**
+ * ngInject
+ */
+function SliderContainerDirective($window) {
   return {
     controller: function () {},
     compile: function (elem) {
@@ -92,7 +96,7 @@ function SliderContainerDirective() {
           var input = element[0].querySelector('md-input-container');
 
           if (input) {
-            var computedStyle = getComputedStyle(input);
+            var computedStyle = $window.getComputedStyle(input);
             var minWidth = parseInt(computedStyle.minWidth);
             var padding = parseInt(computedStyle.paddingLeft) + parseInt(computedStyle.paddingRight);
 
@@ -191,6 +195,10 @@ function SliderDirective($$rAF, $window, $mdAria, $mdUtil, $mdConstant, $mdThemi
       '</div>',
     compile: compile
   };
+
+  function setTimeout(fn, delay) {
+    return $timeout(fn, delay, false);
+  }
 
   // **********************************************************
   // Private Methods

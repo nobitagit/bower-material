@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 goog.provide('ngmaterial.components.dialog');
 goog.require('ngmaterial.components.backdrop');
@@ -1128,7 +1128,7 @@ function MdDialogProvider($$interimElementProvider) {
 
       // Set up elements before and after the dialog content to capture focus and
       // redirect back into the dialog.
-      topFocusTrap = document.createElement('div');
+      topFocusTrap = $document[0].createElement('div');
       topFocusTrap.classList.add('md-dialog-focus-trap');
       topFocusTrap.tabIndex = 0;
 
@@ -1172,7 +1172,7 @@ function MdDialogProvider($$interimElementProvider) {
       function getParents(element) {
         var parents = [];
         while (element.parentNode) {
-          if (element === document.body) {
+          if (element === $document[0].body) {
             return parents;
           }
           var children = element.parentNode.children;

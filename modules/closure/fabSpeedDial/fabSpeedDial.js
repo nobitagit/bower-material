@@ -2,18 +2,18 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 goog.provide('ngmaterial.components.fabShared');
 goog.require('ngmaterial.core');
 (function() {
   'use strict';
 
-  MdFabController['$inject'] = ["$scope", "$element", "$animate", "$mdUtil", "$mdConstant", "$timeout"];
+  MdFabController['$inject'] = ["$scope", "$element", "$animate", "$mdUtil", "$mdConstant", "$timeout", "$document"];
   angular.module('material.components.fabShared', ['material.core'])
     .controller('MdFabController', MdFabController);
 
-  function MdFabController($scope, $element, $animate, $mdUtil, $mdConstant, $timeout) {
+  function MdFabController($scope, $element, $animate, $mdUtil, $mdConstant, $timeout, $document) {
     var vm = this;
     var initialAnimationAttempts = 0;
 
@@ -184,7 +184,7 @@ goog.require('ngmaterial.core');
       // On the next tick, setup a check for outside clicks; we do this on the next tick to avoid
       // clicks/touches that result in the isOpen attribute changing (e.g. a bound radio button)
       $mdUtil.nextTick(function() {
-        angular.element(document).on('click touchend', checkForOutsideClick);
+        $document.on('click touchend', checkForOutsideClick);
       });
 
       // TODO: On desktop, we should be able to reset the indexes so you cannot tab through, but
@@ -194,7 +194,7 @@ goog.require('ngmaterial.core');
 
     function disableKeyboard() {
       $element.off('keydown', keyPressed);
-      angular.element(document).off('click touchend', checkForOutsideClick);
+      $document.off('click touchend', checkForOutsideClick);
     }
 
     function checkForOutsideClick(event) {
@@ -324,8 +324,8 @@ goog.require('ngmaterial.core');
    *
    * @type {number}
    */
-  MdFabSpeedDialFlingAnimation['$inject'] = ["$timeout"];
-  MdFabSpeedDialScaleAnimation['$inject'] = ["$timeout"];
+  MdFabSpeedDialFlingAnimation['$inject'] = ["$timeout", "$window"];
+  MdFabSpeedDialScaleAnimation['$inject'] = ["$timeout", "$window"];
   var cssAnimationDuration = 300;
 
   /**
@@ -437,7 +437,7 @@ goog.require('ngmaterial.core');
     }
   }
 
-  function MdFabSpeedDialFlingAnimation($timeout) {
+  function MdFabSpeedDialFlingAnimation($timeout, $window) {
     function delayDone(done) { $timeout(done, cssAnimationDuration, false); }
 
     function runAnimation(element) {
@@ -457,7 +457,7 @@ goog.require('ngmaterial.core');
       var variablesElement = el.querySelector('._md-css-variables');
 
       // Setup JS variables based on our CSS variables
-      var startZIndex = parseInt(window.getComputedStyle(variablesElement).zIndex);
+      var startZIndex = parseInt($window.getComputedStyle(variablesElement).zIndex);
 
       // Always reset the items to their natural position/state
       angular.forEach(items, function(item, index) {
@@ -528,7 +528,7 @@ goog.require('ngmaterial.core');
     };
   }
 
-  function MdFabSpeedDialScaleAnimation($timeout) {
+  function MdFabSpeedDialScaleAnimation($timeout, $window) {
     function delayDone(done) { $timeout(done, cssAnimationDuration, false); }
 
     var delay = 65;
@@ -542,7 +542,7 @@ goog.require('ngmaterial.core');
       var variablesElement = el.querySelector('._md-css-variables');
 
       // Setup JS variables based on our CSS variables
-      var startZIndex = parseInt(window.getComputedStyle(variablesElement).zIndex);
+      var startZIndex = parseInt($window.getComputedStyle(variablesElement).zIndex);
 
       // Always reset the items to their natural position/state
       angular.forEach(items, function(item, index) {

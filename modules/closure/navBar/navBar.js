@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 goog.provide('ngmaterial.components.navBar');
 goog.require('ngmaterial.core');
@@ -501,7 +501,7 @@ function MdNavItem($mdAria, $$rAF, $mdUtil, $window) {
               mdNavItem.disabled = $mdUtil.parseAttributeBoolean(attrs[mutationList[0].attributeName], false);
             });
           };
-          var observer = new MutationObserver(mutationCallback);
+          var observer = new $window.MutationObserver(mutationCallback);
           observer.observe(targetNode, config);
           disconnect = observer.disconnect.bind(observer);
         } else {

@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 goog.provide('ngmaterial.components.gridList');
 goog.require('ngmaterial.core');
@@ -12,7 +12,7 @@ goog.require('ngmaterial.core');
  */
 GridListController['$inject'] = ["$mdUtil"];
 GridLayoutFactory['$inject'] = ["$mdUtil"];
-GridListDirective['$inject'] = ["$interpolate", "$mdConstant", "$mdGridLayout", "$mdMedia"];
+GridListDirective['$inject'] = ["$interpolate", "$mdConstant", "$mdGridLayout", "$mdMedia", "$document"];
 GridTileDirective['$inject'] = ["$mdMedia"];
 angular.module('material.components.gridList', ['material.core'])
        .directive('mdGridList', GridListDirective)
@@ -105,7 +105,7 @@ angular.module('material.components.gridList', ['material.core'])
  * </md-grid-list>
  * </hljs>
  */
-function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
+function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia, $document) {
   return {
     restrict: 'E',
     controller: GridListController,
@@ -282,6 +282,7 @@ function GridListDirective($interpolate, $mdConstant, $mdGridLayout, $mdMedia) {
 
       // The width and horizontal position of each tile is always calculated the same way, but the
       // height and vertical position depends on the rowMode.
+      var document = $document[0];
       var ltr = document.dir != 'rtl' && document.body.dir != 'rtl';
       var style = ltr ? {
           left: POSITION({ unit: hUnit, offset: position.col, gutter: gutter }),

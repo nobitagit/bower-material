@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 goog.provide('ngmaterial.core');
 
@@ -319,16 +319,17 @@ function ColorUtilFactory() {
   };
 }
 
-angular.module('material.core')
+
+MdConstantFactory['$inject'] = ["$document"];angular.module('material.core')
 .factory('$mdConstant', MdConstantFactory);
 
 /**
  * Factory function that creates the grab-bag $mdConstant service.
  * ngInject
  */
-function MdConstantFactory() {
+function MdConstantFactory($document) {
 
-  var prefixTestEl = document.createElement('div');
+  var prefixTestEl = $document[0].createElement('div');
   var vendorPrefix = getVendorPrefix(prefixTestEl);
   var isWebkit = /webkit/i.test(vendorPrefix);
   var SPECIAL_CHARS_REGEXP = /([:\-_]+(.))/g;
@@ -1059,8 +1060,8 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
 
   var $mdUtil = {
     dom: {},
-    now: window.performance && window.performance.now ?
-      angular.bind(window.performance, window.performance.now) : Date.now || function() {
+    now: $window.performance && $window.performance.now ?
+      angular.bind($window.performance, $window.performance.now) : Date.now || function() {
       return new Date().getTime();
     },
 
@@ -1121,7 +1122,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
 
     clientRect: function(element, offsetParent, isOffsetRect) {
       var node = getNode(element);
-      offsetParent = getNode(offsetParent || node.offsetParent || document.body);
+      offsetParent = getNode(offsetParent || node.offsetParent || $document[0].body);
       var nodeRect = node.getBoundingClientRect();
 
       // The user can ask for an offsetRect: a rect relative to the offsetParent,
@@ -1157,7 +1158,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
      * @returns {number}
      */
     getViewportTop: function() {
-      return window.scrollY || window.pageYOffset || 0;
+      return $window.scrollY || $window.pageYOffset || 0;
     },
 
     /**
@@ -1348,7 +1349,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
     forceFocus: function(element) {
       var node = element[0] || element;
 
-      document.addEventListener('click', function focusOnClick(ev) {
+      $document[0].addEventListener('click', function focusOnClick(ev) {
         if (ev.target === node && ev.$focus) {
           node.focus();
           ev.stopImmediatePropagation();
@@ -1357,8 +1358,8 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
         }
       }, true);
 
-      var newEvent = document.createEvent('MouseEvents');
-      newEvent.initMouseEvent('click', false, true, window, {}, 0, 0, 0, 0,
+      var newEvent = $document[0].createEvent('MouseEvents');
+      newEvent.initMouseEvent('click', false, true, $window, {}, 0, 0, 0, 0,
         false, false, false, false, 0, null);
       newEvent.$material = true;
       newEvent.$focus = true;
@@ -1570,7 +1571,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
      * Build polyfill for the Node.contains feature (if needed)
      */
     elementContains: function(node, child) {
-      var hasContains = (window.Node && window.Node.prototype && Node.prototype.contains);
+      var hasContains = ($window.Node && $window.Node.prototype && $window.Node.prototype.contains);
       var findFn = hasContains ? angular.bind(node, node.contains) : angular.bind(node, function(arg) {
         // compares the positions of two nodes and returns a bitmask
         return (node === child) || !!(this.compareDocumentPosition(arg) & 16);
@@ -1738,7 +1739,7 @@ function UtilFactory($document, $timeout, $compile, $rootScope, $$mdAnimate, $in
     getNearestContentElement: function (element) {
       var current = element.parent()[0];
       // Look for the nearest parent md-content, stopping at the rootElement.
-      while (current && current !== $rootElement[0] && current !== document.body && current.nodeName.toUpperCase() !== 'MD-CONTENT') {
+      while (current && current !== $rootElement[0] && current !== $document[0].body && current.nodeName.toUpperCase() !== 'MD-CONTENT') {
         current = current.parentNode;
       }
       return current;
@@ -1904,7 +1905,7 @@ angular.element.prototype.blur = angular.element.prototype.blur || function() {
  * @description
  * Aria Expectations for AngularJS Material components.
  */
-MdAriaService['$inject'] = ["$$rAF", "$log", "$window", "$interpolate"];
+mdAriaService['$inject'] = ["$$rAF", "$log", "$window", "$interpolate", "$document", "showWarnings"];
 angular
   .module('material.core')
   .provider('$mdAria', MdAriaProvider);
@@ -1938,8 +1939,8 @@ function MdAriaProvider() {
 
   return {
     disableWarnings: disableWarnings,
-    $get: ["$$rAF", "$log", "$window", "$interpolate", function($$rAF, $log, $window, $interpolate) {
-      return MdAriaService.apply(config, arguments);
+    $get: ["$injector", function($injector) {
+      return $injector.invoke(mdAriaService, undefined, config);
     }]
   };
 
@@ -1956,12 +1957,7 @@ function MdAriaProvider() {
 /*
  * ngInject
  */
-function MdAriaService($$rAF, $log, $window, $interpolate) {
-
-  // Load the showWarnings option from the current context and store it inside of a scope variable,
-  // because the context will be probably lost in some function calls.
-  var showWarnings = this.showWarnings;
-
+function mdAriaService($$rAF, $log, $window, $interpolate, $document, showWarnings) {
   return {
     expect: expect,
     expectAsync: expectAsync,
@@ -2031,7 +2027,7 @@ function MdAriaService($$rAF, $log, $window, $interpolate) {
 
   function getText(element) {
     element = element[0] || element;
-    var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+    var walker = $document[0].createTreeWalker(element, $window.NodeFilter.SHOW_TEXT, null, false);
     var text = '';
 
     var node;
@@ -2319,6 +2315,7 @@ angular
 MdCompilerProvider['$inject'] = ['$compileProvider'];
 function MdCompilerProvider($compileProvider) {
 
+  MdCompilerService['$inject'] = ["$q", "$templateRequest", "$injector", "$compile", "$controller", "$document"];
   var provider = this;
 
   /**
@@ -2415,9 +2412,9 @@ function MdCompilerProvider($compileProvider) {
     return false;
   }
 
-  this.$get = ["$q", "$templateRequest", "$injector", "$compile", "$controller",
-    function($q, $templateRequest, $injector, $compile, $controller) {
-      return new MdCompilerService($q, $templateRequest, $injector, $compile, $controller);
+  this.$get = ["$injector",
+    function($injector) {
+      return $injector.instantiate(MdCompilerService);
     }];
 
   /**
@@ -2493,7 +2490,10 @@ function MdCompilerProvider($compileProvider) {
    * </hljs>
    *
    */
-  function MdCompilerService($q, $templateRequest, $injector, $compile, $controller) {
+  /**
+   * ngInject
+   */
+  function MdCompilerService($q, $templateRequest, $injector, $compile, $controller, $document) {
 
     /** @private @const {!angular.$q} */
     this.$q = $q;
@@ -2509,6 +2509,9 @@ function MdCompilerProvider($compileProvider) {
 
     /** @private @const {!angular.$controller} */
     this.$controller = $controller;
+
+    /** @private @const {!angular.$controller} */
+    this.$document = $document;
   }
 
   /**
@@ -2730,7 +2733,7 @@ function MdCompilerProvider($compileProvider) {
    * @returns {{element: !JQLite, restore: !function}}
    */
   MdCompilerService.prototype._fetchContentElement = function(options) {
-
+    var document = this.$document[0];
     var contentEl = options.contentElement;
     var restoreFn = null;
 
@@ -2780,8 +2783,9 @@ function MdCompilerProvider($compileProvider) {
 
 
 
-MdGesture['$inject'] = ["$$MdGestureHandler", "$$rAF", "$timeout"];
-attachToDocument['$inject'] = ["$mdGesture", "$$MdGestureHandler"];var HANDLERS = {};
+MdGesture['$inject'] = ["$$MdGestureHandler", "$$rAF", "$timeout", "$window", "$document"];
+MdGestureHandler['$inject'] = ["$window", "$document"];
+attachToDocument['$inject'] = ["$mdGesture", "$$MdGestureHandler", "$document"];var HANDLERS = {};
 
 /**
  * The state of the current 'pointer'. The pointer represents the state of the current touch.
@@ -2881,8 +2885,8 @@ MdGestureProvider.prototype = {
    * $get is used to build an instance of $mdGesture
    * ngInject
    */
-  $get : ["$$MdGestureHandler", "$$rAF", "$timeout", function($$MdGestureHandler, $$rAF, $timeout) {
-       return new MdGesture($$MdGestureHandler, $$rAF, $timeout);
+  $get : ["$injector", function($injector) {
+    return $injector.instantiate(MdGesture);
   }]
 };
 
@@ -2892,7 +2896,9 @@ MdGestureProvider.prototype = {
  * MdGesture factory construction function
  * ngInject
  */
-function MdGesture($$MdGestureHandler, $$rAF, $timeout) {
+function MdGesture($$MdGestureHandler, $$rAF, $timeout, $window, $document) {
+  var window = $window;
+  var navigator = $window.navigator;
   var userAgent = navigator.userAgent || navigator.vendor || window.opera;
   var isIos = userAgent.match(/ipad|iphone|ipod/i);
   var isAndroid = userAgent.match(/android/i);
@@ -3145,7 +3151,7 @@ function MdGesture($$MdGestureHandler, $$rAF, $timeout) {
     });
 
   function getTouchAction() {
-    var testEl = document.createElement('div');
+    var testEl = $document[0].createElement('div');
     var vendorPrefixes = ['', 'webkit', 'Moz', 'MS', 'ms', 'o'];
 
     for (var i = 0; i < vendorPrefixes.length; i++) {
@@ -3175,8 +3181,11 @@ function GestureHandler (name) {
   this.state = {};
 }
 
-function MdGestureHandler() {
-  var hasJQuery =  (typeof window.jQuery !== 'undefined') && (angular.element === window.jQuery);
+/**
+ * ngInject
+ */
+function MdGestureHandler($window, $document) {
+  var hasJQuery =  (typeof $window.jQuery !== 'undefined') && (angular.element === $window.jQuery);
 
   GestureHandler.prototype = {
     options: {},
@@ -3298,13 +3307,14 @@ function MdGestureHandler() {
    * @param eventPointer the pointer object that matches this event.
    */
   function nativeDispatchEvent(srcEvent, eventType, eventPointer) {
+    var document = $document[0];
     eventPointer = eventPointer || pointer;
     var eventObj;
 
     if (eventType === 'click' || eventType === 'mouseup' || eventType === 'mousedown' ) {
       eventObj = document.createEvent('MouseEvents');
       eventObj.initMouseEvent(
-        eventType, true, true, window, srcEvent.detail,
+        eventType, true, true, $window, srcEvent.detail,
         eventPointer.x, eventPointer.y, eventPointer.x, eventPointer.y,
         srcEvent.ctrlKey, srcEvent.altKey, srcEvent.shiftKey, srcEvent.metaKey,
         srcEvent.button, srcEvent.relatedTarget || null
@@ -3326,13 +3336,14 @@ function MdGestureHandler() {
  * Attach Gestures: hook document and check shouldHijack clicks
  * ngInject
  */
-function attachToDocument( $mdGesture, $$MdGestureHandler ) {
+function attachToDocument( $mdGesture, $$MdGestureHandler, $document) {
   if (disableAllGestures) {
     return;
   }
 
   // Polyfill document.contains for IE11.
-  // TODO: move to util
+  // TODO: avoid muating $document!
+  var document = $document[0];
   document.contains || (document.contains = function (node) {
     return document.body.contains(node);
   });
@@ -3582,7 +3593,7 @@ function canFocus(element) {
  * @description
  * User interaction detection to provide proper accessibility.
  */
-MdInteractionService['$inject'] = ["$timeout", "$mdUtil"];
+MdInteractionService['$inject'] = ["$timeout", "$mdUtil", "$document", "$window"];
 angular
   .module('material.core.interaction', [])
   .service('$mdInteraction', MdInteractionService);
@@ -3612,11 +3623,16 @@ angular
  * </hljs>
  *
  */
-function MdInteractionService($timeout, $mdUtil) {
+/**
+ * ngInject
+ */
+function MdInteractionService($timeout, $mdUtil, $document, $window) {
   this.$timeout = $timeout;
   this.$mdUtil = $mdUtil;
+  this.$window = $window;
+  this.$document = $document;
 
-  this.bodyElement = angular.element(document.body);
+  this.bodyElement = angular.element($document[0].body);
   this.isBuffering = false;
   this.bufferTimeout = null;
   this.lastInteractionType = null;
@@ -3651,6 +3667,8 @@ function MdInteractionService($timeout, $mdUtil) {
  * body element.
  */
 MdInteractionService.prototype.initializeEvents = function() {
+  var window = this.$window;
+  var document = this.$document[0];
   // IE browsers can also trigger pointer events, which also leads to an interaction.
   var pointerEvent = 'MSPointerEvent' in window ? 'MSPointerDown' : 'PointerEvent' in window ? 'pointerdown' : null;
 
@@ -4486,6 +4504,8 @@ function InterimElementProvider() {
 (function() {
   'use strict';
 
+   detectDisabledLayouts['$inject'] = ["$document", "$$mdLayout"];
+  disableLayoutDirective['$inject'] = ["$$mdLayout"];
   var $mdUtil, $interpolate, $log;
 
   var SUFFIXES = /(-gt)?-(sm|md|lg|print)/g;
@@ -4495,25 +4515,6 @@ function InterimElementProvider() {
   var LAYOUT_OPTIONS = ['row', 'column'];
   var ALIGNMENT_MAIN_AXIS= [ "", "start", "center", "end", "stretch", "space-around", "space-between" ];
   var ALIGNMENT_CROSS_AXIS= [ "", "start", "center", "end", "stretch" ];
-
-  var config = {
-    /**
-     * Enable directive attribute-to-class conversions
-     * Developers can use `<body md-layout-css />` to quickly
-     * disable the Layout directives and prohibit the injection of Layout classNames
-     */
-    enabled: true,
-
-    /**
-     * List of mediaQuery breakpoints and associated suffixes
-     *
-     *   [
-     *    { suffix: "sm", mediaQuery: "screen and (max-width: 599px)" },
-     *    { suffix: "md", mediaQuery: "screen and (min-width: 600px) and (max-width: 959px)" }
-     *   ]
-     */
-    breakpoints: []
-  };
 
   registerLayoutAPI( angular.module('material.core.layout', ['ng']) );
 
@@ -4587,10 +4588,28 @@ function InterimElementProvider() {
     // Register other, special directive functions for the Layout features:
     module
 
-      .provider('$$mdLayout'     , function() {
+      .provider('$$mdLayout', function() {
+        /**
+         * Enable directive attribute-to-class conversions
+         * Developers can use `<body md-layout-css />` to quickly
+         * disable the Layout directives and prohibit the injection of Layout classNames
+         */
+        var enabled = true;
         // Publish internal service for Layouts
         return {
-          $get : angular.noop,
+          $get : function() {
+            return {
+              enabled: function() {
+                return enabled;
+              },
+              disabled: function() {
+                return !enabled;
+              },
+              disable: function() {
+                enabled = false;
+              }
+            };
+          },
           validateAttributeValue : validateAttributeValue,
           validateAttributeUsage : validateAttributeUsage,
           /**
@@ -4598,7 +4617,7 @@ function InterimElementProvider() {
            * When disabled, this stops all attribute-to-classname generations
            */
           disableLayouts  : function(isDisabled) {
-            config.enabled =  (isDisabled !== true);
+            enabled =  (isDisabled !== true);
           }
         };
       })
@@ -4630,8 +4649,7 @@ function InterimElementProvider() {
       .directive('showLtMd'       , warnAttrNotSupported('show-lt-md'))
       .directive('showLtLg'       , warnAttrNotSupported('show-lt-lg'))
 
-      // Determine if
-      .config( detectDisabledLayouts );
+      .run( detectDisabledLayouts );
 
     /**
      * Converts snake_case to camelCase.
@@ -4658,9 +4676,10 @@ function InterimElementProvider() {
    /**
     * ngInject
     */
-   function detectDisabledLayouts() {
-     var isDisabled = !!document.querySelector('[md-layouts-disabled]');
-     config.enabled = !isDisabled;
+   function detectDisabledLayouts($document, $$mdLayout) {
+     if ($document[0].querySelector('[md-layouts-disabled]')) {
+       $$mdLayout.disable();
+     }
    }
 
   /**
@@ -4683,9 +4702,12 @@ function InterimElementProvider() {
    * conversions; this would obviate the use of the `md-layout-css` directive
    *
    */
-  function disableLayoutDirective() {
+  /**
+   * ngInject
+   */
+  function disableLayoutDirective($$mdLayout) {
     // Return a 1x-only, first-match attribute directive
-    config.enabled = false;
+    $$mdLayout.disable();
 
     return {
       restrict : 'A',
@@ -4698,12 +4720,12 @@ function InterimElementProvider() {
    * finish processing. Eliminates flicker with Material.Layouts
    */
   function buildCloakInterceptor(className) {
-    return [ '$timeout', function($timeout){
+    return [ '$timeout', '$$mdLayout', function($timeout, $$mdLayout){
       return {
         restrict : 'A',
         priority : -10,   // run after normal ng-cloak
         compile  : function( element ) {
-          if (!config.enabled) return angular.noop;
+          if ($$mdLayout.disabled()) return angular.noop;
 
           // Re-add the cloak
           element.addClass(className);
@@ -4738,7 +4760,7 @@ function InterimElementProvider() {
    */
   function attributeWithObserve(className) {
 
-    return ['$mdUtil', '$interpolate', "$log", function(_$mdUtil_, _$interpolate_, _$log_) {
+    return ['$mdUtil', '$interpolate', "$log", '$$mdLayout', function(_$mdUtil_, _$interpolate_, _$log_, $$mdLayout) {
       $mdUtil = _$mdUtil_;
       $interpolate = _$interpolate_;
       $log = _$log_;
@@ -4747,7 +4769,7 @@ function InterimElementProvider() {
         restrict: 'A',
         compile: function(element, attr) {
           var linkFn;
-          if (config.enabled) {
+          if ($$mdLayout.enabled()) {
             // immediately replace static (non-interpolated) invalid values...
 
             validateAttributeUsage(className, attr, element, $log);
@@ -4785,7 +4807,7 @@ function InterimElementProvider() {
    * any attribute value
    */
   function attributeWithoutValue(className) {
-    return ['$mdUtil', '$interpolate', "$log", function(_$mdUtil_, _$interpolate_, _$log_) {
+    return ['$mdUtil', '$interpolate', "$log", '$$mdLayout', function(_$mdUtil_, _$interpolate_, _$log_, $$mdLayout) {
       $mdUtil = _$mdUtil_;
       $interpolate = _$interpolate_;
       $log = _$log_;
@@ -4794,7 +4816,7 @@ function InterimElementProvider() {
         restrict: 'A',
         compile: function(element, attr) {
           var linkFn;
-          if (config.enabled) {
+          if ($$mdLayout.enabled()) {
             // immediately replace static (non-interpolated) invalid values...
 
             validateAttributeValue( className,
@@ -5016,7 +5038,7 @@ function InterimElementProvider() {
  * @description
  * AngularJS Material Live Announcer to provide accessibility for Voice Readers.
  */
-MdLiveAnnouncer['$inject'] = ["$timeout"];
+MdLiveAnnouncer['$inject'] = ["$timeout", "$document"];
 angular
   .module('material.core')
   .service('$mdLiveAnnouncer', MdLiveAnnouncer);
@@ -5043,12 +5065,12 @@ angular
  * </hljs>
  *
  */
-function MdLiveAnnouncer($timeout) {
+function MdLiveAnnouncer($timeout, $document) {
   /** @private @const @type {!angular.$timeout} */
   this._$timeout = $timeout;
 
   /** @private @const @type {!HTMLElement} */
-  this._liveElement = this._createLiveElement();
+  this._liveElement = createLiveElement($document[0]);
 
   /** @private @const @type {!number} */
   this._announceTimeout = 100;
@@ -5085,9 +5107,8 @@ MdLiveAnnouncer.prototype.announce = function(message, politeness) {
  * Creates a live announcer element, which listens for DOM changes and announces them
  * to the screenreaders.
  * @returns {!HTMLElement}
- * @private
  */
-MdLiveAnnouncer.prototype._createLiveElement = function() {
+function createLiveElement(document) {
   var liveEl = document.createElement('div');
 
   liveEl.classList.add('md-visually-hidden');
@@ -5098,7 +5119,7 @@ MdLiveAnnouncer.prototype._createLiveElement = function() {
   document.body.appendChild(liveEl);
 
   return liveEl;
-};
+}
 
 /**
  * @ngdoc service
@@ -5107,16 +5128,16 @@ MdLiveAnnouncer.prototype._createLiveElement = function() {
  *
  * @description
  *
- * A provider and a service that simplifies meta tags access
+ * A service that simplifies meta tags access
  *
  * Note: This is intended only for use with dynamic meta tags such as browser color and title.
  * Tags that are only processed when the page is rendered (such as `charset`, and `http-equiv`)
  * will not work since `$$mdMeta` adds the tags after the page has already been loaded.
  *
  * ```js
- * app.config(function($$mdMetaProvider) {
- *   var removeMeta = $$mdMetaProvider.setMeta('meta-name', 'content');
- *   var metaValue  = $$mdMetaProvider.getMeta('meta-name'); // -> 'content'
+ * app.run(function($$mdMeta) {
+ *   var removeMeta = $$mdMeta.setMeta('meta-name', 'content');
+ *   var metaValue  = $$mdMeta.getMeta('meta-name'); // -> 'content'
  *
  *   removeMeta();
  * });
@@ -5133,8 +5154,8 @@ MdLiveAnnouncer.prototype._createLiveElement = function() {
  *
  */
 angular.module('material.core.meta', [])
-  .provider('$$mdMeta', function () {
-    var head = angular.element(document.head);
+  .factory('$$mdMeta', ['$document', function ($document) {
+    var head = angular.element($document[0].head);
     var metaElements = {};
 
     /**
@@ -5148,7 +5169,7 @@ angular.module('material.core.meta', [])
         return true;
       }
 
-      var element = document.getElementsByName(name)[0];
+      var element = $document[0].getElementsByName(name)[0];
 
       if (!element) {
         return false;
@@ -5209,17 +5230,12 @@ angular.module('material.core.meta', [])
       return metaElements[name].attr('content');
     }
 
-    var module = {
+    return {
       setMeta: setMeta,
       getMeta: getMeta
     };
+  }]);
 
-    return angular.extend({}, module, {
-      $get: function () {
-        return module;
-      }
-    });
-  });
   /**
    * @ngdoc module
    * @name material.core.componentRegistry
@@ -6333,30 +6349,16 @@ angular.module('material.core.theming.palette', [])
  * @description
  * Theming
  */
-detectDisabledThemes['$inject'] = ["$mdThemingProvider"];
+ThemingProvider['$inject'] = ["$mdColorPalette", "$injector"];
+generateAllThemes['$inject'] = ["$injector", "$mdTheming", "$document"];
 ThemingDirective['$inject'] = ["$mdTheming", "$interpolate", "$parse", "$mdUtil", "$q", "$log"];
 ThemableDirective['$inject'] = ["$mdTheming"];
-ThemingProvider['$inject'] = ["$mdColorPalette", "$$mdMetaProvider"];
-generateAllThemes['$inject'] = ["$injector", "$mdTheming"];
 angular.module('material.core.theming', ['material.core.theming.palette', 'material.core.meta'])
   .directive('mdTheme', ThemingDirective)
   .directive('mdThemable', ThemableDirective)
   .directive('mdThemesDisabled', disableThemesDirective )
   .provider('$mdTheming', ThemingProvider)
-  .config( detectDisabledThemes )
   .run(generateAllThemes);
-
-/**
- * Detect if the HTML or the BODY tags has a [md-themes-disabled] attribute
- * If yes, then immediately disable all theme stylesheet generation and DOM injection
- */
-/**
- * ngInject
- */
-function detectDisabledThemes($mdThemingProvider) {
-  var isDisabled = !!document.querySelector('[md-themes-disabled]');
-  $mdThemingProvider.disableTheming(isDisabled);
-}
 
 /**
  * @ngdoc service
@@ -6548,18 +6550,21 @@ var VALID_HUE_VALUES = [
   '700', '800', '900', 'A100', 'A200', 'A400', 'A700'
 ];
 
-var themeConfig = {
-  disableTheming : false,   // Generate our themes at run time; also disable stylesheet DOM injection
-  generateOnDemand : false, // Whether or not themes are to be generated on-demand (vs. eagerly).
-  registeredStyles : [],    // Custom styles registered to be used in the theming of custom components.
-  nonce : null              // Nonce to be added as an attribute to the generated themes style tags.
-};
+function browserColorSetter() {
+  var browserColor = {};
+  return {
+    setBrowserColor: function setBrowserColor(color) {
+      browserColor.color = color;
+    },
+    browserColor: browserColor,
+  }
+}
 
 /**
- *
+ * ngInject
  */
-function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
-  ThemingService['$inject'] = ["$rootScope", "$mdUtil", "$q", "$log"];
+function ThemingProvider($mdColorPalette, $injector) {
+  ThemingService['$inject'] = ["$rootScope", "$mdUtil", "$q", "$log", "$document", "$$mdMeta", "browserColor"];
   PALETTES = { };
   var THEMES = { };
 
@@ -6567,6 +6572,9 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
   var alwaysWatchTheme = false;
   var defaultTheme = 'default';
+  var bcs = browserColorSetter();
+  var doBrowserColor = bcs.setBrowserColor;
+  var browserColor = bcs.browserColor;
 
   // Load JS Defined Palettes
   angular.extend(PALETTES, $mdColorPalette);
@@ -6578,11 +6586,11 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
    * @param {string} color Hex value of the wanted browser color
    * @returns {function} Remove function of the meta tags
    */
-  var setBrowserColor = function (color) {
+  var setBrowserColor = function ($$mdMeta, color) {
     // Chrome, Firefox OS and Opera
-    var removeChrome = $$mdMetaProvider.setMeta('theme-color', color);
+    var removeChrome = $$mdMeta.setMeta('theme-color', color);
     // Windows Phone
-    var removeWindows = $$mdMetaProvider.setMeta('msapplication-navbutton-color', color);
+    var removeWindows = $$mdMeta.setMeta('msapplication-navbutton-color', color);
 
     return function () {
       removeChrome();
@@ -6604,7 +6612,7 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
    * - `hue` -  `{string}`: The hue from the selected palette. Default is `800`.<br/>
    * @returns {function} Function that removes the browser coloring when called.
    */
-  var enableBrowserColor = function (options) {
+  var enableBrowserColor = function ($$mdMeta, options) {
     options = angular.isObject(options) ? options : {};
 
     var theme = options.theme || 'default';
@@ -6615,7 +6623,14 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
     var color = angular.isObject(palette[hue]) ? palette[hue].hex : palette[hue];
 
-    return setBrowserColor(color);
+    return setBrowserColor($$mdMeta, color);
+  };
+
+  var themeConfig = {
+    disableTheming : false,   // Generate our themes at run time; also disable stylesheet DOM injection
+    generateOnDemand : false, // Whether or not themes are to be generated on-demand (vs. eagerly).
+    registeredStyles : [],    // Custom styles registered to be used in the theming of custom components.
+    nonce : null              // Nonce to be added as an attribute to the generated themes style tags.
   };
 
   return themingProvider = {
@@ -6689,9 +6704,13 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
       alwaysWatchTheme = alwaysWatch;
     },
 
-    enableBrowserColor: enableBrowserColor,
+    enableBrowserColor: function(color) {
+      doBrowserColor(color);
+    },
 
-    $get: ThemingService,
+    $get: ['$injector', function($injector) {
+      return $injector.invoke(ThemingService, undefined, { browserColor: browserColor });
+    }],
     _LIGHT_DEFAULT_HUES: LIGHT_DEFAULT_HUES,
     _DARK_DEFAULT_HUES: DARK_DEFAULT_HUES,
     _PALETTES: PALETTES,
@@ -6892,8 +6911,8 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
       self[colorType + 'Color'] = function() {
         var args = Array.prototype.slice.call(arguments);
-        // eslint-disable-next-line no-console
-        console.warn('$mdThemingProviderTheme.' + colorType + 'Color() has been deprecated. ' +
+        var $log = $injector.get('$log');
+        $log.warn('$mdThemingProviderTheme.' + colorType + 'Color() has been deprecated. ' +
                      'Use $mdThemingProviderTheme.' + colorType + 'Palette() instead.');
         return self[colorType + 'Palette'].apply(self, args);
       };
@@ -7037,7 +7056,7 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
    */
 
   /* ngInject */
-  function ThemingService($rootScope, $mdUtil, $q, $log) {
+  function ThemingService($rootScope, $mdUtil, $q, $log, $document, $$mdMeta, browserColor) {
     // Allow us to be invoked via a linking function signature.
     var applyTheme = function (scope, el) {
       if (el === undefined) { el = scope; scope = undefined; }
@@ -7063,7 +7082,7 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
     applyTheme.inherit = inheritTheme;
     applyTheme.registered = registered;
     applyTheme.defaultTheme = function() { return defaultTheme; };
-    applyTheme.generateTheme = function(name) { generateTheme(THEMES[name], name, themeConfig.nonce); };
+    applyTheme.generateTheme = function(name) { generateTheme($document[0], THEMES[name], name, themeConfig.nonce); };
     applyTheme.defineTheme = function(name, options) {
       options = options || {};
 
@@ -7089,7 +7108,36 @@ function ThemingProvider($mdColorPalette, $$mdMetaProvider) {
 
       return $q.resolve(name);
     };
-    applyTheme.setBrowserColor = enableBrowserColor;
+
+    applyTheme.setBrowserColor = function (color) {
+      return enableBrowserColor($$mdMeta, color);
+    };
+
+    doBrowserColor = function (color) {
+      $log.warn("$mdThemingProvider.enableBrowserColor() is deprecated, use $mdTheming.setBrowserColor(); in run.");
+      applyTheme.setBrowserColor(color);
+    };
+
+    if ('color' in browserColor) {
+      doBrowserColor(browserColor.color);
+      delete browserColor.color;
+    }
+
+    applyTheme.isDisabled = function() {
+      return themeConfig.disableTheming;
+    };
+
+    applyTheme.registeredStyles = function() {
+      return themeConfig.registeredStyles.join('');
+    };
+
+    applyTheme.generateOnDemand = function() {
+      return themeConfig.generateOnDemand;
+    };
+
+    applyTheme.nonce = function() {
+      return themeConfig.nonce;
+    };
 
     return applyTheme;
 
@@ -7285,8 +7333,6 @@ function ThemingDirective($mdTheming, $interpolate, $parse, $mdUtil, $q, $log) {
  *
  */
 function disableThemesDirective() {
-  themeConfig.disableTheming = true;
-
   // Return a 1x-only, first-match attribute directive
   return {
     restrict : 'A',
@@ -7361,13 +7407,25 @@ function parseRules(theme, colorType, rules) {
 var rulesByType = {};
 
 // Generate our themes at run time given the state of THEMES and PALETTES
-function generateAllThemes($injector, $mdTheming) {
-  var head = document.head;
+/**
+ * ngInject
+ */
+function generateAllThemes($injector, $mdTheming, $document) {
+  /**
+   * Detect if the HTML or the BODY tags has a [md-themes-disabled] attribute
+   * If yes, then immediately disable all theme stylesheet generation and DOM injection
+   */
+  var isDisabled = (
+    !$mdTheming.isDisabled ||  // tests tinker with $mdTheming
+    $mdTheming.isDisabled() ||
+    $document[0].querySelector('[md-themes-disabled]')
+  );
+  var head = $document[0].head;
   var firstChild = head ? head.firstElementChild : null;
-  var themeCss = !themeConfig.disableTheming && $injector.has('$MD_THEME_CSS') ? $injector.get('$MD_THEME_CSS') : '';
+  var themeCss = !isDisabled && $injector.has('$MD_THEME_CSS') ? $injector.get('$MD_THEME_CSS') : '';
 
   // Append our custom registered styles to the theme stylesheet.
-  themeCss += themeConfig.registeredStyles.join('');
+  themeCss += $mdTheming.registeredStyles ? $mdTheming.registeredStyles() : '';
 
   if ( !firstChild ) return;
   if (themeCss.length === 0) return; // no rules, so no point in running this expensive task
@@ -7411,11 +7469,11 @@ function generateAllThemes($injector, $mdTheming) {
 
   // If themes are being generated on-demand, quit here. The user will later manually
   // call generateTheme to do this on a theme-by-theme basis.
-  if (themeConfig.generateOnDemand) return;
+  if ($mdTheming.generateOnDemand()) return;
 
   angular.forEach($mdTheming.THEMES, function(theme) {
     if (!GENERATED[theme.name] && !($mdTheming.defaultTheme() !== 'default' && theme.name === 'default')) {
-      generateTheme(theme, theme.name, themeConfig.nonce);
+      generateTheme($document[0], theme, theme.name, $mdTheming.nonce());
     }
   });
 
@@ -7481,7 +7539,7 @@ function generateAllThemes($injector, $mdTheming) {
   }
 }
 
-function generateTheme(theme, name, nonce) {
+function generateTheme(document, theme, name, nonce) {
   var head = document.head;
   var firstChild = head ? head.firstElementChild : null;
 
@@ -7557,25 +7615,29 @@ function rgba(rgbArray, opacity) {
 }
 
 
-})(window.angular);
+})(angular);
 
 // Polyfill angular < 1.4 (provide $animateCss)
+animateDomUtils['$inject'] = ["$mdUtil", "$q", "$timeout", "$mdConstant", "$animateCss", "$window"];
 angular
   .module('material.core')
-  .factory('$$mdAnimate', ["$q", "$timeout", "$mdConstant", "$animateCss", function($q, $timeout, $mdConstant, $animateCss){
+  .factory('$$mdAnimate', ["$injector", function($injector){
 
      // Since $$mdAnimate is injected into $mdUtil... use a wrapper function
      // to subsequently inject $mdUtil as an argument to the AnimateDomUtils
 
      return function($mdUtil) {
-       return AnimateDomUtils( $mdUtil, $q, $timeout, $mdConstant, $animateCss);
+       return $injector.invoke(animateDomUtils, undefined, { $mdUtil: $mdUtil });
      };
    }]);
 
 /**
  * Factory function that requires special injections
  */
-function AnimateDomUtils($mdUtil, $q, $timeout, $mdConstant, $animateCss) {
+/**
+ * ngInject
+ */
+function animateDomUtils($mdUtil, $q, $timeout, $mdConstant, $animateCss, $window) {
   var self;
   return self = {
     /**
@@ -7653,7 +7715,7 @@ function AnimateDomUtils($mdUtil, $q, $timeout, $mdConstant, $animateCss) {
          * @returns {boolean} True if there is no transition/duration; false otherwise.
          */
         function noTransitionFound(styles) {
-          styles = styles || window.getComputedStyle(element[0]);
+          styles = styles || $window.getComputedStyle(element[0]);
 
           return styles.transitionDuration == '0s' || (!styles.transition && !styles.transitionProperty);
         }
@@ -7828,14 +7890,6 @@ if (angular.version.minor >= 4) {
 
   var forEach = angular.forEach;
 
-  var WEBKIT = angular.isDefined(document.documentElement.style.WebkitAppearance);
-  var TRANSITION_PROP = WEBKIT ? 'WebkitTransition' : 'transition';
-  var ANIMATION_PROP = WEBKIT ? 'WebkitAnimation' : 'animation';
-  var PREFIX = WEBKIT ? '-webkit-' : '';
-
-  var TRANSITION_EVENTS = (WEBKIT ? 'webkitTransitionEnd ' : '') + 'transitionend';
-  var ANIMATION_EVENTS = (WEBKIT ? 'webkitAnimationEnd ' : '') + 'animationend';
-
   var $$ForceReflowFactory = ['$document', function($document) {
     return function() {
       return $document[0].body.clientWidth + 1;
@@ -7977,8 +8031,16 @@ if (angular.version.minor >= 4) {
     .factory('$$forceReflow', $$ForceReflowFactory)
     .factory('$$AnimateRunner', $$AnimateRunnerFactory)
     .factory('$$rAFMutex', $$rAFMutexFactory)
-    .factory('$animateCss', ['$window', '$$rAF', '$$AnimateRunner', '$$forceReflow', '$$jqLite', '$timeout', '$animate',
-                     function($window,   $$rAF,   $$AnimateRunner,   $$forceReflow,   $$jqLite,   $timeout, $animate) {
+    .factory('$animateCss', ['$window', '$$rAF', '$$AnimateRunner', '$$forceReflow', '$$jqLite', '$timeout', '$animate', '$document',
+                     function($window,   $$rAF,   $$AnimateRunner,   $$forceReflow,   $$jqLite,   $timeout, $animate, $document) {
+
+      var WEBKIT = angular.isDefined($document[0].documentElement.style.WebkitAppearance);
+      var TRANSITION_PROP = WEBKIT ? 'WebkitTransition' : 'transition';
+      var ANIMATION_PROP = WEBKIT ? 'WebkitAnimation' : 'animation';
+      var PREFIX = WEBKIT ? '-webkit-' : '';
+
+      var TRANSITION_EVENTS = (WEBKIT ? 'webkitTransitionEnd ' : '') + 'transitionend';
+      var ANIMATION_EVENTS = (WEBKIT ? 'webkitAnimationEnd ' : '') + 'animationend';
 
       function init(element, options) {
 

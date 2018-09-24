@@ -2,7 +2,7 @@
  * AngularJS Material Design
  * https://github.com/angular/material
  * @license MIT
- * v1.1.10-master-4493389
+ * v1.1.10-master-c60f15862
  */
 (function( window, angular, undefined ){
 "use strict";
@@ -14,6 +14,7 @@
    * @ngdoc module
    * @name material.components.fabToolbar
    */
+  MdFabToolbarAnimation['$inject'] = ["$window"];
   angular
     // Declare our module
     .module('material.components.fabToolbar', [
@@ -110,7 +111,10 @@
     }
   }
 
-  function MdFabToolbarAnimation() {
+  /**
+   * ngInject
+   */
+  function MdFabToolbarAnimation($window) {
 
     function runAnimation(element, className, done) {
       // If no className was specified, don't do anything
@@ -131,7 +135,7 @@
       // If we have both elements, use them to position the new background
       if (triggerElement && backgroundElement) {
         // Get our variables
-        var color = window.getComputedStyle(triggerElement).getPropertyValue('background-color');
+        var color = $window.getComputedStyle(triggerElement).getPropertyValue('background-color');
         var width = el.offsetWidth;
         var height = el.offsetHeight;
 
